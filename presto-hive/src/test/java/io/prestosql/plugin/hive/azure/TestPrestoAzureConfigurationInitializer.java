@@ -45,10 +45,18 @@ public class TestPrestoAzureConfigurationInitializer
                             InjectionPointMetaData::getProperty,
                             InjectionPointMetaData::getSetter));
 
+    private static final Set<String> abfsAccessKey = Set.of(
+            "hive.azure.abfs-storage-account",
+            "hive.azure.abfs-access-key");
+
+    private static final Set<String> abfsOAuth = Set.of(
+            "hive.azure.abfs.oauth-client-endpoint",
+            "hive.azure.abfs.oauth-client-id",
+            "hive.azure.abfs.oauth-client-secret");
+
     private static final Set<Set<String>> propertyGroups = Set.of(
-            Set.of(
-                    "hive.azure.abfs-storage-account",
-                    "hive.azure.abfs-access-key"),
+            abfsAccessKey,
+            abfsOAuth,
             Set.of(
                     "hive.azure.wasb-storage-account",
                     "hive.azure.wasb-access-key"),
@@ -56,6 +64,10 @@ public class TestPrestoAzureConfigurationInitializer
                     "hive.azure.adl-client-id",
                     "hive.azure.adl-credential",
                     "hive.azure.adl-refresh-url"));
+
+    // Pairs of groups that can not be given together
+    private static final Set<Set<Set<String>>> exclusivePropertyGroups = Set.of(
+            Set.of(abfsAccessKey, abfsOAuth));
 
     @DataProvider(parallel = true)
     public Iterator<Object[]> propertyGroups()
@@ -92,6 +104,19 @@ public class TestPrestoAzureConfigurationInitializer
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new PrestoAzureConfigurationInitializer(config));
+    }
+
+    @DataProvider(parallel = true) // Set<String>, Set<String>
+    public Iterator<Object[]> exclusiveProperties()
+    {
+        return exclusivePropertyGroups.stream().map(Set::toArray).iterator();
+    }
+
+    @Test(dataProvider = "exclusiveProperties")
+    public void testExclusiveProperties(Set<String> group1, Set<String> group2)
+    {
+        var config = toConfig(group1, group2);
+        assertThrows(() -> new PrestoAzureConfigurationInitializer(config));
     }
 
     /**
