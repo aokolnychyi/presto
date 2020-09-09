@@ -189,6 +189,7 @@ function deploy_core_site_xml() {
         value="${value//|/\\|}" # escape | as \|
         args+=(-e "s|%$name%|$value|g")
     done
+    exec_in_hadoop_master_container cat "/docker/files/$template"
     exec_in_hadoop_master_container bash -c '
         sed "${@:2}" "/docker/files/$1" > /etc/hadoop/conf/core-site.xml' \
                                     bash "$template" "${args[@]}"

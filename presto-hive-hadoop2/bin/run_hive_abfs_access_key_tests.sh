@@ -18,7 +18,7 @@ test_directory="$(date '+%Y%m%d-%H%M%S')-$(uuidgen | sha1sum | cut -b 1-6)"
 deploy_core_site_xml core-site.xml.abfs-access-key-template ABFS_ACCESS_KEY ABFS_ACCOUNT
 
 # restart hive-server2 to apply changes in core-site.xml
-exec_in_hadoop_master_container supervisorctl restart hive-metastore
+exec_in_hadoop_master_container supervisorctl restart hive-metastore hive-server2
 retry check_hadoop
 
 create_test_tables "abfs://${ABFS_CONTAINER}@${ABFS_ACCOUNT}.dfs.core.windows.net/${test_directory}"
